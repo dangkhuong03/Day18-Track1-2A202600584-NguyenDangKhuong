@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripPilot Hà Giang — Human-Centered AI Design Lab Prototype</title>
+    <style>
+        :root {
+            --bg-main: #f4f6fb;
+            --bg-card: #ffffff;
+            --bg-card-hover: #eef2f9;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --primary-glow: rgba(2, 132, 199, 0.12);
+            
+            --accent-green: #15803d;
+            --accent-green-bg: rgba(21, 128, 61, 0.1);
+            --accent-amber: #b45309;
+            --accent-amber-bg: rgba(180, 83, 9, 0.1);
+            --accent-red: #dc2626;
+            --accent-red-bg: rgba(220, 38, 38, 0.08);
+            
+            --border-color: #dbe2ee;
+            --phone-border: #cbd5e1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Top Header Navigation */
+        header {
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-logo .logo-icon {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .header-title h1 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header-title span {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 400;
+            margin-left: 8px;
+        }
+
+        /* Dynamic Presentation Workspace Split */
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Left Content Workspace */
+        .presentation-panel {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Right iOS Simulator Workspace */
+        .simulator-panel {
+            width: 480px;
+            background-color: #e9edf5;
+            background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
+            background-size: 20px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-left: 1px solid var(--border-color);
+            padding: 20px;
+            position: relative;
+        }
+
+        /* iOS Real Dynamic Frame Styling */
+        .phone-frame {
+            width: 380px;
+            height: 780px;
+            background: #1c1c1e;
+            border-radius: 50px;
+            padding: 12px;
+            box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.25), 0 0 0 4px var(--phone-border);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* iPhone Notch Dynamic Island Simulation */
+        .phone-notch {
+            position: absolute;
+            top: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 110px;
+            height: 28px;
+            background: #000000;
+            border-radius: 20px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+        }
+
+        .phone-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            background-color: #f8fafc;
+            border-radius: 40px;
+            position: relative;
+            border: 1px solid #1c1c1e;
+        }
+
+        /* Hide Scrollbar for App UI Screen */
+        .phone-screen::-webkit-scrollbar {
+            width: 0px;
+        }
+
+        /* Interactive Presentation Slides Control styling */
+        .slide-content {
+            display: none;
+            animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .slide-content.active {
+            display: block;
+        }
+
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Global Reusable Design Tokens */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .badge-recommended { background-color: var(--accent-green-bg); color: var(--accent-green); border: 1px solid rgba(21,128,61,0.2); }
+        .badge-draft { background-color: rgba(15,23,42,0.06); color: var(--text-main); border: 1px solid rgba(15,23,42,0.1); }
+        .badge-low-confidence { background-color: var(--accent-amber-bg); color: var(--accent-amber); border: 1px dashed var(--accent-amber); }
+
+        /* Unified Button Architecture */
+        .btn {
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-primary { 
+            background-color: var(--primary); 
+            color: #ffffff; 
+            box-shadow: 0 4px 14px var(--primary-glow);
+        }
+        .btn-primary:hover { 
+            background-color: var(--primary-dark); 
+            transform: translateY(-1px);
+        }
+        .btn-secondary { background-color: #eef2f9; color: var(--text-main); border: 1px solid var(--border-color); }
+        .btn-secondary:hover { background-color: #e2e8f5; }
+        .btn-outline { background-color: transparent; border: 1px solid var(--border-color); color: var(--text-main); }
+        .btn-outline:hover { background-color: var(--bg-card-hover); border-color: var(--primary); }
+        .btn-danger-outline { background-color: var(--accent-red-bg); border: 1px solid rgba(220,38,38,0.3); color: var(--accent-red); }
+        .btn-danger-outline:hover { background-color: rgba(220,38,38,0.15); }
+
+        /* Rationale Premium Card Design */
+        .rationale-card {
+            background: linear-gradient(145deg, #eef5fc 0%, #f7fafd 100%);
+            border: 1px solid #cfe3f5;
+            border-left: 4px solid var(--primary);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 24px;
+            box-shadow: 0 10px 25px -5px rgba(15,23,42,0.06);
+        }
+        .rationale-card h4 { color: var(--primary); font-size: 1rem; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .rationale-card p { color: #334155; font-size: 0.9rem; line-height: 1.6; }
+
+        /* Interactive Flow Map Tracker */
+        .flow-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 24px 0;
+        }
+        .flow-node {
+            padding: 10px 16px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+        }
+        .flow-node.completed { background-color: #dceefb; color: #0369a1; border-color: #93c5fd; }
+        .flow-node.active { 
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary)); 
+            color: #ffffff; 
+            border-color: var(--primary); 
+            font-weight: 600;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        /* App Mockup UI Elements */
+        .app-header {
+            background-color: #ffffff;
+            padding: 45px 20px 20px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .app-title { font-weight: 800; font-size: 1.25rem; color: var(--text-main); letter-spacing: -0.3px; }
+        .app-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+        
+        /* Selectable Custom Preference Chips */
+        .chip-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+        .chip {
+            padding: 10px 16px;
+            background-color: #f1f5f9;
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .chip:hover { border-color: #94a3b8; color: var(--text-main); }
+        .chip.selected {
+            background-color: var(--primary-glow);
+            border-color: var(--primary);
+            color: var(--primary);
+            font-weight: 600;
+            box-shadow: inset 0 0 10px rgba(2, 132, 199, 0.08);
+        }
+
+        /* Modern App Cards Architecture */
+        .app-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px;
+            transition: all 0.2s ease;
+        }
+        .app-card.selected-border {
+            border-color: var(--primary);
+            background: linear-gradient(180deg, #ffffff 0%, #eef6fc 100%);
+        }
+
+        /* Interactive Timeline Thread */
+        .timeline { position: relative; padding-left: 24px; border-left: 2px solid var(--border-color); margin-left: 8px; }
+        .timeline-item { position: relative; margin-bottom: 20px; }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 5px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            box-shadow: 0 0 8px var(--primary);
+        }
+        .timeline-time { font-size: 0.8rem; font-weight: 700; color: var(--primary); margin-bottom: 2px; }
+        .timeline-desc { font-size: 0.9rem; font-weight: 500; color: var(--text-main); }
+
+        /* 2x2 Matrix Analysis Grid */
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 16px;
+        }
+        .matrix-cell {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.2s ease;
+        }
+        .matrix-cell:hover { transform: translateY(-2px); background-color: var(--bg-card-hover); }
+        .matrix-cell h4 { font-size: 0.95rem; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border-color); color: var(--primary); }
+
+        /* Master System Navigation Footer Controls */
+        .footer-nav {
+            background-color: #ffffff;
+            border-top: 1px solid var(--border-color);
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+        .progress-indicator { color: var(--text-muted); font-size: 0.9rem; font-weight: 500; }
+
+        /* Structured Lab Comparison Tables */
+        .spec-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            font-size: 0.9rem;
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        .spec-table th, .spec-table td {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: left;
+        }
+        .spec-table th { background-color: #eef2f9; font-weight: 600; color: var(--primary); }
+        .spec-table tr:last-child td { border-bottom: none; }
+
+        h2 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; color: var(--text-main); }
+        .text-muted { color: var(--text-muted); line-height: 1.6; font-size: 1rem; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-logo">
+            <div class="logo-icon">TP</div>
+            <div class="header-title">
+                <h1>TripPilot Hà Giang <span>— Mô hình Thực nghiệm Thiết kế AI lấy Con người làm Trung tâm (Human-Centered AI Design)</span></h1>
+            </div>
+        </div>
+        <div class="badge badge-recommended">Phòng Thí Nghiệm Đạt Chuẩn Thuyết Trình</div>
+    </header>
+
+    <div class="main-container">
+
+        <div class="presentation-panel">
+            
+            <div id="pres-slide-1" class="slide-content active">
+                <div class="badge badge-draft" style="margin-bottom: 16px; color: var(--primary);">BÁO CÁO THỰC NGHIỆM ĐỀ TÀI</div>
+                <h2 style="font-size: 2.8rem; margin-bottom: 12px; line-height: 1.1; background: linear-gradient(135deg, #0f172a 0%, #475569 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">TripPilot Hà Giang<br>Trợ Lý Lập Kế Hoạch Du Lịch Thông Minh</h2>
+                <h3 style="font-size: 1.3rem; font-weight: 500; color: var(--primary); margin-bottom: 24px;">Nguyên mẫu Tương tác Người - Máy (HCI) trong bối cảnh Dữ liệu Bất định</h3>
+                <p class="text-muted" style="max-width: 800px; margin-bottom: 30px;">
+                    Nghiên cứu ứng dụng các mô thức tương tác cốt lõi khi AI đóng vai trò hỗ trợ đắc lực nhưng không hoàn hảo. Hệ thống tập trung tối ưu hóa trải nghiệm đi phượt qua các cung đường đèo hiểm trở tại Hà Giang (3 ngày 2 đêm), đảm bảo giữ vững quyền tự quyết của con người và giảm thiểu rủi ro từ thuật toán.
+                </p>
+                <div style="background: var(--bg-card); padding: 24px; border-radius: 16px; border: 1px solid var(--border-color);">
+                    <h4 style="margin-bottom: 12px; font-size: 1rem; color: var(--primary);">Các Nguyên Tắc UX Thiết Yếu Được Trình Bày:</h4>
+                    <ul style="margin-left: 20px; line-height: 1.7; color: #334155; display: flex; flex-direction: column; gap: 8px;">
+                        <li><b>Quản lý Kỳ vọng Tường minh (Explicit Expectation):</b> Định hình rõ ràng biên giới năng lực thuật toán ngay từ bước khởi động.</li>
+                        <li><b>Sửa lỗi Thực tế chủ động (Fault Mitigation):</b> Nhận diện lịch trình quá tải và xử lý khắc phục thay vì chỉ ghi nhận phản hồi trống rỗng.</li>
+                        <li><b>Giải thích Đa Tiêu chí (Explainability):</b> Minh bạch hóa hệ thống trọng số thuật toán và trao quyền tái căn chỉnh cho người dùng.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="pres-slide-2" class="slide-content">
+                <h2>Sơ đồ Luồng Tương tác & Phạm vi Khảo sát</h2>
+                <p class="text-muted">Theo dõi quy trình tương tác khép kín được đồng bộ hóa trực tiếp trên bộ giả lập di động.</p>
+                
+                <div class="flow-container">
+                    <div class="flow-node" data-node="1">Đăng nhập & Định hình (Onboarding)</div>
+                    <div class="flow-node" data-node="2">Thu thập thông tin chủ động</div>
+                    <div class="flow-node" data-node="3">Khởi tạo Bản thảo lịch trình</div>
+                    <div class="flow-node" data-node="4">Minh bạch đề xuất (Explain)</div>
+                    <div class="flow-node" data-node="5">Phục hồi lỗi quá tải</div>
+                    <div class="flow-node" data-node="5.5">Hành động Tự chủ (Act)</div>
+                    <div class="flow-node" data-node="6">Xử lý dữ liệu không chắc chắn</div>
+                    <div class="flow-node" data-node="7">Thiết lập Biên giới Hành động</div>
+                    <div class="flow-node" data-node="8">Ma trận Phản hồi Khép kín</div>
+                </div>
+
+                <h3 style="margin-top: 32px; margin-bottom: 12px; font-size: 1.2rem;">Phân định Biên giới Phạm vi (Scope Matrix)</h3>
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th>Nội dung Nằm trong Phạm vi Thực nghiệm (In-Scope)</th>
+                            <th>Nội dung Nằm ngoài Phạm vi Hệ thống (Out-of-Scope)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Thiết kế giao diện trạng thái hiển thị mức độ tin cậy, bộ lọc cấu hình lại thuật toán và cơ chế Hoàn tác (Undo).</td>
+                            <td>Kết nối cơ sở dữ liệu thật, tích hợp API bản đồ số trực tuyến hoặc hệ thống thanh toán ngân hàng thực tế.</td>
+                        </tr>
+                        <tr>
+                            <td>Mô phỏng lát cắt kịch bản sâu cho chuyến đi 3 ngày 2 đêm tại địa bàn đèo dốc đặc thù của Hà Giang, Việt Nam.</td>
+                            <td>Tìm kiếm vạn năng toàn cầu hoặc tự động tối ưu hóa đa lộ trình nằm ngoài khu vực khảo sát cố định.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="pres-slide-3" class="slide-content">
+                <h2>Thiết lập Kỳ vọng Hệ thống Ngay từ Đầu</h2>
+                <p class="text-muted">Ngăn chặn sự thất vọng của người sử dụng bằng cách công khai minh bạch khả năng và giới hạn của mô hình ngôn ngữ lớn trước khi bắt đầu tính toán lịch trình.</p>
+                
+                <div class="rationale-card">
+                    <h4>Cơ sở Thiết kế (Design Rationale)</h4>
+                    <p>Hệ thống AI ban đầu ở trạng thái "Cold-start" (chưa có dữ liệu người dùng). AI hoàn toàn không biết gì về ngân sách thực tế, thể trạng, kỹ năng lái xe đường đèo hay sở thích ẩn của bạn. Do việc đặt phòng và di chuyển vùng đèo dốc mang tính rủi ro cao về tiền bạc và an toàn, AI tuyệt đối không được phép tự động ra quyết định thực thi thay con người.</p>
+                </div>
+            </div>
+
+            <div id="pres-slide-4" class="slide-content">
+                <h2>Thu thập Ngữ cảnh Tối thiểu & Hiệu quả</h2>
+                <p class="text-muted">Tránh gây áp lực nhập liệu cho người dùng. Hệ thống chỉ chất vấn đúng 3 biến số có trọng số cao nhất để định hình khung phương án ban đầu.</p>
+                
+                <div class="rationale-card">
+                    <h4>Cơ sở Thiết kế (Design Rationale)</h4>
+                    <p>AI chủ động hỏi vì thiếu dữ liệu gốc. Tuy nhiên, bằng việc thiết lập tính năng "Bỏ qua" và tự động kích hoạt các Giả định An toàn (Assumptions) — như tự động cộng thêm 30-45 phút phòng ngừa rủi ro thời tiết/đường xấu vùng cao — hệ thống giúp người dùng duy trì dòng trải nghiệm liền mạch mà không có cảm giác bị tra khảo lý lịch.</p>
+                </div>
+            </div>
+
+            <div id="pres-slide-5" class="slide-content">
+                <h2>Giải thích Thuật toán & Tái Cấu hình Trọng số</h2>
+                <p class="text-muted">Phá vỡ rào cản "Hộp đen" (Black-box) của thuật toán đề xuất. Khi người dùng biết lý do tại sao một địa điểm đứng đầu danh sách, niềm tin hệ thống sẽ được thiết lập vững chắc.</p>
+                
+                <div class="rationale-card">
+                    <h4>Cơ sở Thiết kế (Design Rationale)</h4>
+                    <p>Mặc định, hệ thống giả định tính an toàn lộ trình (không phải đi xe đường đèo ban đêm) quan trọng hơn giá tiền rẻ nhất. Bằng cách phơi bày các thông số phân tích cơ bản (Tiện đường: 45%, Giá cả: 30%, View: 25%) và cho phép nhấn nút thay đổi ưu tiên, hệ thống chuyển giao quyền kiểm soát tối cao lại cho hành khách.</p>
+                </div>
+            </div>
+
+            <div id="pres-slide-6" class="slide-content">
+                <h2>Nhận diện Sai sót Lịch trình & Khắc phục Động</h2>
+                <p class="text-muted">Các thuật toán tối ưu hóa lịch trình thường mắc lỗi thực tế như: dồn ép quá nhiều điểm tham quan trong một ngày mà quên mất giới hạn thể lực và vận tốc an toàn thực tế trên đường đèo.</p>
+                
+                <div class="rationale-card">
+                    <h4>Cơ sở Thiết kế (Design Rationale)</h4>
+                    <p>Khi người dùng phản hồi tiêu cực ("Lịch trình quá dày"), quy trình khắc phục không được phép dừng lại ở câu lệnh vô cảm "Cảm ơn bạn đã góp ý". AI phải nhận định được lỗ hổng kiến thức, lập tức phân tách lại thời gian đệm và phân bổ các điểm tham quan dư thừa sang ngày tiếp theo, đồng thời giữ quyền Hoàn tác (Undo) cho người sử dụng.</p>
+                </div>
+            </div>
+
+            <div id="pres-slide-7" class="slide-content">
+                <h2>Hành động Tự chủ Rủi ro thấp (Pure Act)</h2>
+                <p class="text-muted">Không phải mọi hành động của AI đều cần hỏi trước. Khi rủi ro thấp, dữ liệu đủ tin cậy và việc hoàn tác dễ dàng, AI được phép tự thực hiện rồi báo lại — không chờ xác nhận.</p>
+                
+                <div class="rationale-card">
+                    <h4>Cơ sở Thiết kế (Design Rationale)</h4>
+                    <p>Sau khi sửa lịch trình quá tải, AI tự động chèn thêm thời gian đệm an toàn (15–20 phút) vào mỗi điểm dừng còn lại trong Ngày 1, không cần hỏi lại người dùng. Đây là hành động <b>Act</b> hợp lệ vì: rủi ro thấp (chỉ là thời gian, không phải tiền hay an toàn), dễ phát hiện (hiển thị rõ trên timeline), và dễ hoàn tác (một nút Undo). Nếu AI tính buffer sai (ví dụ dư quá nhiều), người chịu ảnh hưởng là chính người dùng — họ có thể bị rút ngắn thời gian tham quan thực tế, nhưng hậu quả nhỏ và sửa được ngay, nên không cần nâng lên mức Ask.</p>
+                </div>
+            </div>
+
+            <div id="pres-slide-8" class="slide-content">
+                <h2>Truyền tải Độ tươi của Dữ liệu & Mức tin cậy Thấp</h2>
+                <p class="text-muted">Đối với các khu vực vùng sâu vùng xa, dữ liệu điểm đến thường biến động theo mùa. Hệ thống cần trung thực thừa nhận mức độ bất định thay vì cố tạo ra cảm giác chắc chắn giả tạo.</p>
+                
+                <div class="rationale-card">
+                    <h4>Cơ sở Thiết kế (Design Rationale)</h4>
+                    <p>Việc công khai nhãn dữ liệu kiểm tra từ "8 tháng trước" và gán mác "Mức tin cậy: Thấp" (Low confidence) giúp bảo vệ an toàn cho hành trình của người dùng. Đi kèm với cảnh báo là giải pháp thay thế đã được xác thực an toàn (Safer option) để đưa người dùng thoát khỏi thế tiến thoái lưỡng nan. Nếu AI im lặng và không cảnh báo, người chịu ảnh hưởng trực tiếp là người dùng — họ có thể đến nơi đã đóng cửa giữa vùng núi xa, mất thời gian và có thể mất an toàn khi tìm chỗ ăn khác vào tối muộn.</p>
+                </div>
+            </div>
+
+            <div id="pres-slide-9" class="slide-content">
+                <h2>Biên giới Chủ quyền Hành động (Act / Ask / Don’t Act)</h2>
+                <p class="text-muted">Thiết lập các chốt chặn vận hành an toàn nhằm bảo vệ tài chính và thông tin nhạy cảm của khách hàng trong suốt chu kỳ tác vụ. Mức độ tự chủ tăng dần theo rủi ro: từ buffer thời gian (Act, đã thấy ở phần trước) đến giao dịch tiền thật (Ask/Don't Act).</p>
+                
+                <div class="rationale-card">
+                    <h4>Cơ sở Thiết kế (Mô hình Ủy quyền Hành động)</h4>
+                    <p>
+                        • <b>Chủ động Thực hiện (Act):</b> AI tự động đóng gói toàn bộ thông tin lịch trình, ngày đi, số khách thành cấu trúc văn bản tinh gọn để người dùng dễ sao chép — rủi ro thấp, dễ kiểm tra lại trước khi dùng.<br>
+                        • <b>Hỏi Ý kiến (Ask):</b> Yêu cầu người dùng đồng ý trước khi kích hoạt cổng chuyển hướng điều hướng ra ngoài.<br>
+                        • <b>Tuyệt đối Không thực hiện (Don't Act):</b> AI không có quyền hạn can thiệp sâu vào nút bấm thanh toán hoặc tự ý nhập mã thẻ tín dụng trên trang đích của đối tác. Nếu AI vượt ranh giới này, người chịu ảnh hưởng là người dùng — họ có thể bị trừ tiền sai, đặt nhầm ngày, hoặc mất quyền khiếu nại vì giao dịch không do chính họ xác nhận. Vì hậu quả tài chính khó hoàn tác, đây buộc phải là Don't Act, không có ngoại lệ.
+                    </p>
+                </div>
+            </div>
+
+            <div id="pres-slide-10" class="slide-content">
+                <h2>Ma trận Tương tác Phản hồi Khép kín (2x2 Matrix)</h2>
+                <p class="text-muted">Cơ chế thu thập chỉ số tương tác hai chiều nhằm cải tiến liên tục hiệu năng xử lý của mô hình trí tuệ nhân tạo.</p>
+                
+                <div class="matrix-grid">
+                    <div class="matrix-cell" style="border-top: 4px solid var(--primary);">
+                        <h4>Người dùng gửi -> Hệ thống (Chủ động - Explicit)</h4>
+                        <p style="font-size:0.85rem; line-height:1.6; color:var(--text-muted);">
+                            • Nhấp chọn nút phản hồi "Lịch trình quá dày"<br>
+                            • Thao tác thay đổi trọng số phân loại khách sạn<br>
+                            • Chọn giải pháp thay thế an toàn "Quán ăn B"
+                        </p>
+                    </div>
+                    <div class="matrix-cell" style="border-top: 4px solid var(--accent-amber);">
+                        <h4>Người dùng gửi -> Hệ thống (Bị động - Implicit)</h4>
+                        <p style="font-size:0.85rem; line-height:1.6; color:var(--text-muted);">
+                            • Bỏ qua không nhấp vào đề xuất ưu tiên cao<br>
+                            • Kích hoạt nút Hoàn tác (Undo recovery) cấp tốc<br>
+                            • Lướt qua các cảnh báo có mức độ tin cậy thấp
+                        </p>
+                    </div>
+                    <div class="matrix-cell" style="border-top: 4px solid var(--accent-green);">
+                        <h4>Hệ thống gửi -> Người dùng (Chủ động - Explicit)</h4>
+                        <p style="font-size:0.85rem; line-height:1.6; color:var(--text-muted);">
+                            • Gán nhãn cảnh báo Mức tin cậy Thấp (Low confidence)<br>
+                            • Hiển thị mốc thời gian cập nhật dữ liệu (8 tháng trước)<br>
+                            • Tuyên bố giới hạn quyền hạn không thể thanh toán thay
+                        </p>
+                    </div>
+                    <div class="matrix-cell" style="border-top: 4px solid #334155;">
+                        <h4>Hệ thống gửi -> Người dùng (Bị động - Implicit)</h4>
+                        <p style="font-size:0.85rem; line-height:1.6; color:var(--text-muted);">
+                            • Gắn huy hiệu "Đề xuất" (Recommended) trên thẻ phòng<br>
+                            • Trạng thái hiển thị bản thảo thiết lập mờ (Draft state)<br>
+                            • Khóa cô lập nút thanh toán nằm ngoài tầm can thiệp AI
+                        </p>
+                    </div>
+                </div>
+                <p style="font-size: 0.85rem; margin-top: 16px; color: var(--accent-amber); font-weight: 500;">
+                    ⚠️ Lưu ý nghiên cứu: Các tín hiệu phản hồi bị động (Implicit) chỉ được dùng làm tham số định hướng tối ưu hóa, tuyệt đối không được coi là xác nhận đồng ý chính thức từ người dùng.
+                </p>
+            </div>
+
+            <div id="pres-slide-11" class="slide-content">
+                <h2>Kịch bản Trình diễn 5 Phút (Demo Path) & Kiểm định</h2>
+                <div style="background: var(--bg-card); padding: 18px; border-radius: 12px; border: 1px solid var(--border-color); font-size:0.9rem; line-height:1.6; margin-bottom: 20px;">
+                    <b>0:00–0:25</b> Giới thiệu đối tượng nghiên cứu, bối cảnh hiểm trở của địa hình Hà Giang và lát cắt tính năng.<br>
+                    <b>0:25–1:05</b> Trình bày màn hình Onboarding và thiết lập ranh giới kỳ vọng ban đầu.<br>
+                    <b>1:05–1:50</b> Thao tác chọn cấu hình câu hỏi và kích hoạt lịch trình dự thảo dựa trên các Giả định (Assumptions).<br>
+                    <b>1:50–2:25</b> Phân tích tính minh bạch thông qua việc thay đổi trọng số xếp hạng phòng Homestay.<br>
+                    <b>2:25–3:05</b> Kích hoạt tình huống xử lý lỗi khi hành trình quá dày và thao tác khôi phục lộ trình.<br>
+                    <b>3:05–3:30</b> Cho xem AI tự hành động (Act) — chèn buffer thời gian không cần hỏi, kèm nút hoàn tác.<br>
+                    <b>3:30–4:10</b> Thực nghiệm cơ chế cảnh báo dữ liệu cũ và chọn phương án thay thế an toàn.<br>
+                    <b>4:10–5:00</b> Giải thích ranh giới ủy quyền hành động Act/Ask/Don't Act và ma trận feedback trước khi kết thúc bàn giao.
+                </div>
+
+                <h3 style="margin-bottom: 10px; font-size: 1.1rem; color: var(--primary);">Tiêu chuẩn Đánh giá Kỹ thuật (Evaluation Checklist)</h3>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; font-size:0.85rem; color:#334155;">
+                    <div>✓ Có thiết kế màn hình Onboarding</div>
+                    <div>✓ Minh bạch thuật toán (Explainability)</div>
+                    <div>✓ Đủ ít nhất 4 kịch bản tương tác nâng cao</div>
+                    <div>✓ Hiện diện đầy đủ cơ chế Phục hồi lỗi (2 kịch bản)</div>
+                    <div>✓ Chu trình dòng chảy liền mạch từ đầu tới đuôi</div>
+                    <div>✓ Đủ cả 3 mức Act / Ask / Don't Act, có ví dụ riêng cho từng mức</div>
+                    <div>✓ Có bảng ma trận phản hồi 4 vùng rõ rệt</div>
+                    <div>✓ Giao diện mô phỏng có khả năng click phản hồi động</div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="simulator-panel">
+            
+            <div class="phone-frame">
+                <div class="phone-notch">
+                    <span style="color: white; font-size: 0.75rem; font-weight: 600;">12:04</span>
+                    <div style="display: flex; gap: 4px; align-items: center;">
+                        <span style="color: white; font-size: 0.7rem;">📶</span>
+                        <span style="color: white; font-size: 0.7rem;">🔋</span>
+                    </div>
+                </div>
+
+                <div class="phone-screen" id="phone-screen-content">
+                    </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="footer-nav">
+        <div>
+            <span class="progress-indicator" id="slide-index-label">Slide 1 / 10</span>
+        </div>
+        <div style="display: flex; gap: 16px;">
+            <button class="btn btn-secondary" onclick="moveSlide(-1)">← Trở lại</button>
+            <button class="btn btn-primary" onclick="moveSlide(1)">Tiếp theo →</button>
+        </div>
+        <div style="color: var(--text-muted); font-size: 0.8rem; font-weight: 500;">
+            * Mẹo thuyết trình: Bạn có thể dùng phím mũi tên Trái / Phải trên bàn phím để chuyển slide nhanh.
+        </div>
+    </div>
+
+    <script>
+        let currentSlideIndex = 1;
+        const totalSlidesCount = 11;
+
+        // Reactive Application State Properties
+        let userPreferences = { companion: null, budget: null, style: null };
+        let currentWeightSetting = 'balanced'; // balanced, price
+        let hasRecoveredPackedRoute = false;
+        let selectedSafetyOption = 'unverified'; // unverified, verified
+
+        // Lifecycle Entry Hook
+        window.addEventListener('DOMContentLoaded', () => {
+            renderAppScreenState();
+            updatePresentationFlowNodes();
+        });
+
+        // Key Listeners for Presentation Controls
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') moveSlide(1);
+            if (e.key === 'ArrowLeft') moveSlide(-1);
+        });
+
+        function moveSlide(direction) {
+            document.getElementById(`pres-slide-${currentSlideIndex}`).classList.remove('active');
+            
+            currentSlideIndex += direction;
+            if (currentSlideIndex < 1) currentSlideIndex = 1;
+            if (currentSlideIndex > totalSlidesCount) currentSlideIndex = totalSlidesCount;
+            
+            document.getElementById(`pres-slide-${currentSlideIndex}`).classList.add('active');
+            document.getElementById('slide-index-label').innerText = `Slide ${currentSlideIndex} / ${totalSlidesCount}`;
+            
+            updatePresentationFlowNodes();
+            renderAppScreenState();
+        }
+
+        function updatePresentationFlowNodes() {
+            document.querySelectorAll('.flow-node').forEach((node) => {
+                const nodeStep = parseFloat(node.getAttribute('data-node'));
+                node.className = 'flow-node';
+                
+                if (currentSlideIndex === 2 && nodeStep === 1) node.classList.add('active');
+                if (currentSlideIndex === 3 && nodeStep === 1) node.classList.add('active');
+                if (currentSlideIndex === 4 && nodeStep === 2) node.classList.add('active');
+                if (currentSlideIndex === 5 && nodeStep === 4) node.classList.add('active');
+                if (currentSlideIndex === 6 && nodeStep === 5) node.classList.add('active');
+                if (currentSlideIndex === 7 && nodeStep === 5.5) node.classList.add('active');
+                if (currentSlideIndex === 8 && nodeStep === 6) node.classList.add('active');
+                if (currentSlideIndex === 9 && nodeStep === 7) node.classList.add('active');
+                if (currentSlideIndex === 10 && nodeStep === 8) node.classList.add('active');
+                if (currentSlideIndex > 3 && nodeStep < currentSlideIndex - 2) node.classList.add('completed');
+            });
+        }
+
+        function setChipPreference(category, value) {
+            userPreferences[category] = value;
+            renderAppScreenState();
+        }
+
+        function triggerWeightChange(mode) {
+            currentWeightSetting = mode;
+            renderAppScreenState();
+        }
+
+        function triggerPackedRecovery(status) {
+            hasRecoveredPackedRoute = status;
+            renderAppScreenState();
+        }
+
+        function triggerSafetyReplacement(mode) {
+            selectedSafetyOption = mode;
+            renderAppScreenState();
+        }
+
+        // Screen Template Compiler Pipeline
+        function renderAppScreenState() {
+            const screen = document.getElementById('phone-screen-content');
+            
+            if (currentSlideIndex <= 2) {
+                screen.innerHTML = `
+                    <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; flex:1; padding:32px; text-align:center;  color:white;">
+                        <div style="background: linear-gradient(135deg, var(--primary), var(--primary-dark)); width: 70px; height: 70px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 900; color: #000; margin-bottom: 16px; box-shadow: 0 10px 25px rgba(56,189,248,0.3);">✈️</div>
+                    <h2 style="
+    font-size:1.8rem;
+    font-weight:900;
+    margin-bottom:6px;
+    letter-spacing:-0.5px;
+    background: linear-gradient(to right, #0f172a, #0284c7);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+">
+    TripPilot
+</h2>
+                        <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:32px;">Hà Giang AI Travel Companion</p>
+                        <div class="badge badge-recommended" style="font-size:0.75rem; font-weight:700; margin-bottom:40px; padding: 6px 16px; background-color: rgba(56, 189, 248, 0.1); color: var(--primary); border-color: rgba(56,189,248,0.2);">HCI DESIGN PROTOTYPE</div>
+                        <button class="btn btn-primary" style="width:100%; padding:14px;" onclick="moveSlide(1)">Bắt đầu Trải nghiệm</button>
+                    </div>
+                `;
+            } 
+            else if (currentSlideIndex === 3) {
+                screen.innerHTML = `
+                    <div class="app-header">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span style="font-size:1.5rem;">👋</span>
+                            <div>
+                                <div class="app-title">Xin chào! Tôi là TripPilot</div>
+                                <div style="font-size:0.75rem; color:var(--text-muted);">Trợ lý thiết kế lịch trình chuyên sâu Hà Giang</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="app-body" style="flex:1; justify-content:space-between;">
+                        <div style="display:flex; flex-direction:column; gap:14px;">
+                            <div class="app-card" style="border-left: 4px solid var(--accent-green);">
+                                <h4 style="font-size:0.85rem; color:var(--accent-green); margin-bottom:6px; font-weight:700;">✨ NHỮNG GÌ AI CÓ THỂ HỖ TRỢ:</h4>
+                                <ul style="font-size:0.8rem; padding-left:16px; color:#334155; display:flex; flex-direction:column; gap:4px; line-height:1.4;">
+                                    <li>Đề xuất cung đường tối ưu đèo Quản Bạ, Mã Pí Lèng.</li>
+                                    <li>So sánh Homestay bản địa theo vị trí và ngân sách.</li>
+                                    <li>Ước tính thời gian đệm an toàn phòng ngừa thời tiết xấu.</li>
+                                </ul>
+                            </div>
+
+                            <div class="app-card" style="border-left: 4px solid var(--accent-red); background-color: rgba(220,38,38,0.03);">
+                                <h4 style="font-size:0.85rem; color:var(--accent-red); margin-bottom:6px; font-weight:700;">⚠️ GIỚI HẠN (AI KHÔNG THỂ LÀM):</h4>
+                                <ul style="font-size:0.8rem; padding-left:16px; color:#334155; display:flex; flex-direction:column; gap:4px; line-height:1.4;">
+                                    <li>Không cam kết chính xác 100% giá phòng mùa cao điểm.</li>
+                                    <li>Không tự động thanh toán tiền mặt/chuyển khoản của khách.</li>
+                                    <li>Không thay thế được xác nhận cuối cùng của chủ Homestay.</li>
+                                </ul>
+                            </div>
+
+                            <div class="app-card" style="background: #f1f5f9; border-style: dashed;">
+                                <h4 style="font-size:0.85rem; margin-bottom:4px; color: var(--primary);">QUYỀN KIỂM SOÁT CỦA BẠN:</h4>
+                                <p style="font-size:0.78rem; color:var(--text-muted); line-height:1.4;">Bạn giữ quyền tối cao: Bỏ qua câu hỏi tùy chọn, Kiểm chứng nguồn chứng cứ, và Hoàn tác (Undo) mọi cấu trúc điều chỉnh.</p>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" style="width:100%; padding:14px;" onclick="moveSlide(1)">Tôi đã hiểu, Tiếp tục</button>
+                    </div>
+                `;
+            }
+            else if (currentSlideIndex === 4) {
+                screen.innerHTML = `
+                    <div class="app-header">
+                        <div class="app-title">Cấu hình Cá nhân hóa</div>
+                    </div>
+                    <div class="app-body">
+                        <div style="background: var(--primary-glow); border: 1px solid rgba(2,132,199,0.2); padding:12px; border-radius:12px; font-size:0.85rem; font-weight:500; color: #0c4a6e; display:flex; gap:8px;">
+                            <span>💬</span> <span>Yêu cầu của bạn: "Tôi muốn đi Hà Giang 3 ngày 2 đêm."</span>
+                        </div>
+                        
+                        <div>
+                            <label style="font-size:0.8rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">1. Bạn đồng hành cùng ai?</label>
+                            <div class="chip-group">
+                                <span class="chip ${userPreferences.companion==='Alone'?'selected':''}" onclick="setChipPreference('companion','Alone')">Một mình</span>
+                                <span class="chip ${userPreferences.companion==='Friends'?'selected':''}" onclick="setChipPreference('companion','Friends')">Bạn bè phượt</span>
+                                <span class="chip ${userPreferences.companion==='Couple'?'selected':''}" onclick="setChipPreference('companion','Couple')">Cặp đôi</span>
+                                <span class="chip ${userPreferences.companion==='Family'?'selected':''}" onclick="setChipPreference('companion','Family')">Gia đình</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label style="font-size:0.8rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">2. Phân khúc ngân sách?</label>
+                            <div class="chip-group">
+                                <span class="chip ${userPreferences.budget==='Budget'?'selected':''}" onclick="setChipPreference('budget','Budget')">Tiết kiệm</span>
+                                <span class="chip ${userPreferences.budget==='Mid'?'selected':''}" onclick="setChipPreference('budget','Mid')">Bình dân (Vừa phải)</span>
+                                <span class="chip ${userPreferences.budget==='Comfortable'?'selected':''}" onclick="setChipPreference('budget','Comfortable')">Thoải mái</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label style="font-size:0.8rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">3. Phong cách chuyến đi?</label>
+                            <div class="chip-group">
+                                <span class="chip ${userPreferences.style==='Relaxed'?'selected':''}" onclick="setChipPreference('style','Relaxed')">Nghỉ dưỡng thư thả</span>
+                                <span class="chip ${userPreferences.style==='Photo'?'selected':''}" onclick="setChipPreference('style','Photo')">Săn ảnh phong cảnh</span>
+                                <span class="chip ${userPreferences.style==='Adventure'?'selected':''}" onclick="setChipPreference('style','Adventure')">Khám phá mạo hiểm</span>
+                            </div>
+                        </div>
+
+                        <div style="font-size:0.75rem; color:var(--text-muted); background:#f1f5f9; padding:10px; border-radius:10px; border:1px solid var(--border-color); text-align:center; line-height:1.3;">
+                            💡 Bạn có thể bỏ qua. Hệ thống sẽ tự kích hoạt <b style="color:var(--primary);">Draft (Bản thảo)</b> dựa trên các giả định vùng cao an toàn.
+                        </div>
+
+                        <div style="display:flex; flex-direction:column; gap:8px; margin-top:4px;">
+                            <button class="btn btn-primary" onclick="moveSlide(1)">Khởi tạo kế hoạch phù hợp</button>
+                            <button class="btn btn-outline" onclick="setChipPreference('companion','Friends'); setChipPreference('budget','Mid'); setChipPreference('style','Photo'); moveSlide(1);">Tạo nhanh với giả định hệ thống</button>
+                        </div>
+                    </div>
+                `;
+            }
+            else if (currentSlideIndex === 5) {
+                let cardOrderingHTML = '';
+                if (currentWeightSetting === 'balanced') {
+                    cardOrderingHTML = `
+                        <div class="app-card selected-border" style="position:relative;">
+                            <span class="badge badge-recommended" style="position:absolute; right:12px; top:12px; font-size:0.6rem;">Được đề xuất nhiều nhất</span>
+                            <div style="font-weight:700; font-size:0.95rem; color:var(--primary);">Option B — Homestay Trung tâm Đồng Văn</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted); margin:4px 0 0 0;">€22/đêm • Thuận tiện đi ăn tối • Đánh giá 4.3⭐</div>
+                        </div>
+                        <div class="app-card" style="opacity:0.6;">
+                            <div style="font-weight:700; font-size:0.95rem;">Option A — Phòng trọ Bản địa Giá rẻ</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted); margin:4px 0 0 0;">€15/đêm • Cách xa trung tâm 4.5km • Đánh giá 4.1⭐</div>
+                        </div>
+                        <div class="app-card" style="opacity:0.6;">
+                            <div style="font-weight:700; font-size:0.95rem;">Option C — Bungalow View Núi Panorama</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted); margin:4px 0 0 0;">€35/đêm • Bản làng hẻo lánh • Đánh giá 4.8⭐</div>
+                        </div>
+                    `;
+                } else if (currentWeightSetting === 'price') {
+                    cardOrderingHTML = `
+                        <div class="app-card" style="border-color: var(--accent-amber); background: linear-gradient(180deg, #fffaf0 0%, #fef3e2 100%); animate: fadeIn 0.3s ease;">
+                            <div style="font-weight:700; font-size:0.95rem; color:var(--accent-amber);">Option A — Phòng trọ Bản địa Giá rẻ [Hạng 1]</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted); margin:4px 0;">€15/đêm • Cách xa thị trấn 4.5km • Đánh giá 4.1⭐</div>
+                            <div style="background:var(--accent-amber-bg); color:var(--accent-amber); font-size:0.72rem; padding:8px; margin-top:8px; border-radius:8px; line-height:1.4; border:1px solid rgba(180,83,9,0.15);">
+                                ⚠️ <b>Cảnh báo rủi ro AI:</b> Do bạn ưu tiên giá, vị trí này nằm xa trục lộ chính, buộc phải lái xe qua đèo dốc không có đèn đường sau 18:00 tối.
+                            </div>
+                        </div>
+                        <div class="app-card" style="opacity:0.6;">
+                            <div style="font-weight:700; font-size:0.95rem;">Option B — Homestay Trung tâm Đồng Văn</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted); margin:4px 0 0 0;">€22/đêm • Đánh giá 4.3⭐</div>
+                        </div>
+                    `;
+                }
+
+                screen.innerHTML = `
+                    <div class="app-header">
+                        <div class="app-title">Đề xuất Điểm Lưu trú (3N2Đ)</div>
+                    </div>
+                    <div class="app-body">
+                        <div style="background:#eef6fc; border:1px solid #cfe3f5; padding:12px; border-radius:12px;">
+                            <h4 style="font-size:0.8rem; margin-bottom:4px; color:var(--primary); font-weight:700;">🔍 TẠI SAO LẠI ĐỀ XUẤT OPTION B?</h4>
+                            <p style="font-size:0.78rem; color:#334155; line-height:1.4;">Bạn đã thiết lập phong cách "Cân bằng". Hệ thống ưu tiên chọn điểm nghỉ sát thị trấn Đồng Văn nhằm giảm thiểu rủi ro lái xe đường đèo ban đêm.</p>
+                            <div style="margin-top:8px; font-size:0.72rem; color:var(--primary); font-weight:600; border-top:1px solid #cfe3f5; padding-top:6px;">
+                                Trọng số tính toán: Tiện đường (45%) • Giá cả (30%) • View núi (25%)
+                            </div>
+                        </div>
+
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn btn-outline" style="font-size:0.75rem; padding:8px 12px; border-radius:20px;" onclick="triggerWeightChange('price')">💰 Ưu tiên Giá thấp trước</button>
+                            <button class="btn btn-outline" style="font-size:0.75rem; padding:8px 12px; border-radius:20px;" onclick="triggerWeightChange('balanced')">🔄 Đặt lại mặc định</button>
+                        </div>
+
+                        <div style="display:flex; flex-direction:column; gap:12px;">
+                            ${cardOrderingHTML}
+                        </div>
+
+                        <button class="btn btn-primary" style="margin-top:4px;" onclick="moveSlide(1)">Chốt điểm lưu trú & Xem lộ trình</button>
+                    </div>
+                `;
+            }
+            else if (currentSlideIndex === 6) {
+                screen.innerHTML = `
+                    <div class="app-header">
+                        <div class="app-title">Lộ trình Ngày 1 Chi tiết</div>
+                    </div>
+                    <div class="app-body">
+                        
+                        ${!hasRecoveredPackedRoute ? `
+                            <div style="background:var(--accent-red-bg); border:1px solid rgba(220,38,38,0.2); padding:10px 14px; border-radius:12px; font-size:0.8rem; color:var(--accent-red); display:flex; flex-direction:column; gap:6px;">
+                                <div style="font-weight:700;">⚠️ PHÁT HIỆN LỊCH TRÌNH QUÁ TẢI (Packed Route)</div>
+                                <div style="font-size:0.75rem; color:#b91c1c; line-height:1.3;">Mật độ di chuyển đường đèo dày đặc có thể gây kiệt sức và mất an toàn lái xe.</div>
+                            </div>
+                            
+                            <div class="timeline" style="margin-top:4px;">
+                                <div class="timeline-item"><div class="timeline-time">07:30</div><div class="timeline-desc">Có mặt tại TP. Hà Giang</div></div>
+                                <div class="timeline-item"><div class="timeline-time">08:30</div><div class="timeline-desc">Check-in Cổng Trời Quản Bạ</div></div>
+                                <div class="timeline-item"><div class="timeline-time">10:30</div><div class="timeline-desc">Dạo Rừng thông Yên Minh</div></div>
+                                <div class="timeline-item"><div class="timeline-time">13:30</div><div class="timeline-desc">Chụp ảnh Dốc Thẩm Mã</div></div>
+                                <div class="timeline-item"><div class="timeline-time">15:00</div><div class="timeline-desc">Thăm Nhà của Pao (Sủng Là)</div></div>
+                                <div class="timeline-item"><div class="timeline-time">17:00</div><div class="timeline-desc">Chinh phục Đèo Mã Pí Lèng</div></div>
+                                <div class="timeline-item"><div class="timeline-time">20:00</div><div class="timeline-desc">Chợ đêm cổ Đồng Văn</div></div>
+                            </div>
+
+                            <button class="btn btn-danger-outline" style="width:100%; padding:12px;" onclick="triggerPackedRecovery(true)">🛑 Lịch trình quá dày! Hãy giãn cách giúp tôi</button>
+                        ` : `
+                            <div class="app-card" style="border-left: 4px solid var(--primary); background-color:rgba(2,132,199,0.03);">
+                                <p style="font-size:0.8rem; color:#334155; line-height:1.4;">
+                                    <b>TripPilot AI:</b> "Bạn hoàn toàn chính xác. Cung đường núi hiểm trở Hà Giang cần biên độ thời gian đệm cho thời tiết sương mù và nghỉ chân dừng chụp ảnh."
+                                </p>
+                            </div>
+
+                            <div style="font-size:0.85rem; font-weight:700; margin-top:4px; color:var(--accent-green);">✓ Đã cập nhật Bản thảo giãn cách Ngày 1:</div>
+                            <div class="timeline">
+                                <div class="timeline-item"><div class="timeline-time">08:30</div><div class="timeline-desc">Xuất phát thong thả từ TP. Hà Giang</div></div>
+                                <div class="timeline-item"><div class="timeline-time">10:30</div><div class="timeline-desc">Ngắm cảnh Cổng Trời Quản Bạ</div></div>
+                                <div class="timeline-item"><div class="timeline-time">12:00</div><div class="timeline-desc">Ăn trưa & Nghỉ ngơi tại Yên Minh</div></div>
+                                <div class="timeline-item"><div class="timeline-time">15:30</div><div class="timeline-desc">Chụp ảnh dừng nghỉ Dốc Thẩm Mã</div></div>
+                                <div class="timeline-item"><div class="timeline-time">17:30</div><div class="timeline-desc">Check-in Homestay Đồng Văn an toàn</div></div>
+                            </div>
+
+                            <p style="font-size:0.75rem; color:var(--text-muted); font-style:italic; line-height:1.2;">* Ghi chú: Mã Pí Lèng và Nhà của Pao đã được AI tự động tối ưu dời sang kế hoạch Ngày 2.</p>
+
+                            <div style="display:flex; gap:10px; margin-top:4px;">
+                                <button class="btn btn-secondary" style="flex:1; padding:10px;" onclick="triggerPackedRecovery(false)">↩️ Hoàn tác</button>
+                                <button class="btn btn-primary" style="flex:2; padding:10px;" onclick="moveSlide(1)">Chấp nhận lộ trình mới</button>
+                            </div>
+                        `}
+
+                    </div>
+                `;
+            }
+            else if (currentSlideIndex === 7) {
+                screen.innerHTML = `
+                    <div class="app-header">
+                        <div class="app-title">Lộ trình Ngày 1 — Đã tối ưu</div>
+                    </div>
+                    <div class="app-body">
+                        <div class="app-card" style="border-left: 4px solid var(--accent-green); background-color: rgba(21,128,61,0.04);">
+                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                                <span style="font-size:1.1rem;">⚙️</span>
+                                <h4 style="font-size:0.85rem; color:var(--accent-green); font-weight:700;">AI ĐÃ TỰ ĐỘNG THỰC HIỆN (Act)</h4>
+                            </div>
+                            <p style="font-size:0.78rem; color:#334155; line-height:1.4;">Hệ thống tự chèn thêm 15–20 phút thời gian đệm an toàn vào mỗi điểm dừng, không cần hỏi trước — vì rủi ro thấp và bạn vẫn xem/sửa lại được ngay.</p>
+                        </div>
+
+                        <div class="timeline" style="margin-top:4px;">
+                            <div class="timeline-item"><div class="timeline-time">08:30 <span style="font-size:0.65rem; color:var(--accent-green); font-weight:700;">+15p</span></div><div class="timeline-desc">Xuất phát thong thả từ TP. Hà Giang</div></div>
+                            <div class="timeline-item"><div class="timeline-time">10:45 <span style="font-size:0.65rem; color:var(--accent-green); font-weight:700;">+15p</span></div><div class="timeline-desc">Ngắm cảnh Cổng Trời Quản Bạ</div></div>
+                            <div class="timeline-item"><div class="timeline-time">12:20 <span style="font-size:0.65rem; color:var(--accent-green); font-weight:700;">+20p</span></div><div class="timeline-desc">Ăn trưa & Nghỉ ngơi tại Yên Minh</div></div>
+                            <div class="timeline-item"><div class="timeline-time">15:50 <span style="font-size:0.65rem; color:var(--accent-green); font-weight:700;">+20p</span></div><div class="timeline-desc">Chụp ảnh dừng nghỉ Dốc Thẩm Mã</div></div>
+                            <div class="timeline-item"><div class="timeline-time">17:50 <span style="font-size:0.65rem; color:var(--accent-green); font-weight:700;">+20p</span></div><div class="timeline-desc">Check-in Homestay Đồng Văn an toàn</div></div>
+                        </div>
+
+                        <div style="font-size:0.7rem; color:var(--text-muted); background:#f1f5f9; padding:10px; border-radius:10px; border:1px solid var(--border-color); text-align:center; line-height:1.3;">
+                            💬 Bạn không cần làm gì. Nếu muốn bỏ buffer, bấm hoàn tác bên dưới — thay đổi này không tốn phí và không khó sửa.
+                        </div>
+
+                        <button class="btn btn-secondary" style="width:100%; padding:10px;" onclick="alert('Đã gỡ thời gian đệm an toàn. Lịch trình quay lại như trước khi AI tự động điều chỉnh.')">↩️ Gỡ buffer tự động (Hoàn tác)</button>
+                        <button class="btn btn-primary" style="width:100%; padding:12px; margin-top:4px;" onclick="moveSlide(1)">Tiếp tục</button>
+                    </div>
+                `;
+            }
+            else if (currentSlideIndex === 8) {
+                screen.innerHTML = `
+                    <div class="app-header">
+                        <div class="app-title">Tìm quán ăn tối (Ngày 1)</div>
+                    </div>
+                    <div class="app-body">
+                        
+                        ${selectedSafetyOption === 'unverified' ? `
+                            <div class="app-card" style="border-top: 4px solid var(--accent-amber);">
+                                <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:8px;">
+                                    <h4 style="font-size:0.95rem; font-weight:700;">Quán ăn Đặc sản Dân tộc A</h4>
+                                    <span class="badge badge-low-confidence" style="font-size:0.6rem;">Độ tin cậy thấp</span>
+                                </div>
+                                <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">Mở cửa dự kiến: 18:00 - 22:00</p>
+                                
+                                <div style="background:var(--accent-amber-bg); border: 1px dashed var(--accent-amber); padding:10px; border-radius:8px; font-size:0.75rem; color:var(--accent-amber); line-height:1.4; margin-bottom:14px;">
+                                    ⚠️ <b>Dữ liệu cũ:</b> Thông tin quán được cập nhật từ 8 tháng trước. Giờ hoạt động vùng cao có thể thay đổi theo mùa. Bạn nên xác minh lại trước khi di chuyển.
+                                </div>
+
+                                <div style="display:flex; flex-direction:column; gap:8px;">
+                                    <button class="btn btn-primary" style="font-size:0.82rem; padding:10px;" onclick="triggerSafetyReplacement('verified')">🔄 Thay bằng phương án mới an toàn hơn</button>
+                                    <button class="btn btn-outline" style="font-size:0.82rem; padding:10px;" onclick="moveSlide(1)">Vẫn giữ tùy chọn cũ</button>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="app-card" style="border-color: var(--accent-green); background: linear-gradient(180deg, #f0fdf4 0%, #e6f9ec 100%); animate: fadeIn 0.3s ease;">
+                                <div style="display:flex; justify-content:between; align-items:start; margin-bottom:6px; justify-content: space-between;">
+                                    <h4 style="font-size:0.95rem; color:var(--accent-green); font-weight:700;">Nhà hàng Thắng Cố Cổ Đồng Văn B</h4>
+                                    <span class="badge badge-recommended" style="font-size:0.6rem;">Đã xác thực tuần này</span>
+                                </div>
+                                <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">Cách phòng ngủ của bạn 900m • Điểm đánh giá: 4.5⭐</p>
+                                <p style="font-size:0.75rem; color:var(--accent-green); font-weight:600;">✓ Đã đồng bộ điểm ăn uống an toàn vào cẩm nang số.</p>
+                            </div>
+
+                            <button class="btn btn-secondary" style="width:100%; margin-top:8px;" onclick="triggerSafetyReplacement('unverified')">← Quay lại xem quán ăn cũ</button>
+                            <button class="btn btn-primary" style="width:100%; margin-top:4px;" onclick="moveSlide(1)">Tiếp tục</button>
+                        `}
+
+                    </div>
+                `;
+            }
+            else if (currentSlideIndex >= 9) {
+                screen.innerHTML = `
+                    <div class="app-header">
+                        <div class="app-title">Tổng kết & Tiến hành Đặt phòng</div>
+                    </div>
+                    <div class="app-body">
+                        <div style="background: var(--bg-card); border:1px solid var(--border-color); padding:10px 12px; border-radius:10px; font-size:0.82rem; font-weight:500; color:var(--text-muted);">
+                            💬 Yêu cầu: <span style="color:var(--text-main);">"Đặt phòng homestay này giúp tôi."</span>
+                        </div>
+
+                        <div style="background: rgba(180,83,9,0.06); border-left: 4px solid var(--accent-amber); padding:12px; border-radius: 0 10px 10px 0; font-size:0.78rem; color:#92400e; line-height:1.4;">
+                            <b>Giới hạn chủ quyền hành động:</b> Tôi đã chuẩn bị sẵn Bản thảo đặt phòng (Draft Summary), tuy nhiên để bảo mật thanh toán, việc xác nhận và chuyển tiền cuối cùng bắt buộc phải được thực hiện bởi chính bạn tại trang gốc của nhà cung cấp.
+                        </div>
+
+                        <div class="app-card selected-border" style="font-size:0.8rem; display:flex; flex-direction:column; gap:6px;">
+                            <div style="font-weight:800; color:var(--primary); font-size:0.85rem; letter-spacing:0.3px; margin-bottom:4px; border-bottom:1px solid var(--border-color); padding-bottom:4px;">📋 BẢN THẢO THÔNG TIN ĐẶT PHÒNG</div>
+                            <div>• <b>Tên cơ sở:</b> Option B — Homestay Trung tâm Đồng Văn</div>
+                            <div>• <b>Lịch trình:</b> Ngày 12 - Ngày 14 Tháng 7 (3N2Đ)</div>
+                            <div>• <b>Số lượng khách:</b> 2 Người lớn</div>
+                            <div>• <b>Tổng chi phí tạm tính:</b> €44 (Trả tại quầy lưu trú)</div>
+                        </div>
+
+                        <div style="background:#f1f5f9; border:1px solid var(--border-color); padding:10px; border-radius:10px; font-size:0.7rem; color:var(--text-muted); line-height:1.3;">
+                            🟩 <b>AI Có Thể (Act):</b> Gom dữ liệu form mẫu • Kiểm tra hộ chính sách hủy phòng.<br>
+                            🟥 <b>AI Không Thể (Don't Act):</b> Tự động bấm nút Thanh toán phòng • Cam kết giá phòng không đổi.
+                        </div>
+
+                        <div style="display:flex; flex-direction:column; gap:8px; margin-top:2px;">
+                            <a href="#" class="btn btn-primary" style="text-decoration:none;" onclick="alert('Đang chuyển hướng an toàn sang nền tảng Agoda/Booking đối tác...'); return false;">Mở trang nhà cung cấp gốc (Ask)</a>
+                            <button class="btn btn-outline" style="padding:10px;" onclick="alert('Đã sao chép thông tin dự thảo đặt phòng vào bộ nhớ đệm!');">Sao chép bản tóm tắt thông tin</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
